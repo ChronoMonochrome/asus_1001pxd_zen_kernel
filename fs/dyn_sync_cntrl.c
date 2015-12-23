@@ -109,7 +109,7 @@ static ssize_t dyn_fsync_earlysuspend_show(struct kobject *kobj,
 }
 
 static struct kobj_attribute dyn_fsync_active_attribute = 
-	__ATTR(Dyn_fsync_active, 0666,
+	__ATTR(Dyn_fsync_active, 0644,
 		dyn_fsync_active_show,
 		dyn_fsync_active_store);
 	
@@ -140,17 +140,16 @@ static struct attribute_group dyn_fsync_active_attr_group =
 
 static struct kobject *dyn_fsync_kobj;
 
+#if 0
 static void dyn_fsync_early_suspend(struct early_suspend *h)
 {
 	mutex_lock(&fsync_mutex);
 	if (dyn_fsync_active) {
 		early_suspend_active = true;
-#if 1
 		/* flush all outstanding buffers */
 		wakeup_flusher_threads(0);
 		sync_filesystems(0);
 		sync_filesystems(1);
-#endif
 	}
 	mutex_unlock(&fsync_mutex);
 }
@@ -162,7 +161,6 @@ static void dyn_fsync_late_resume(struct early_suspend *h)
 	mutex_unlock(&fsync_mutex);
 }
 
-#if 0
 static struct early_suspend dyn_fsync_early_suspend_handler = 
 	{
 		.level = EARLY_SUSPEND_LEVEL_BLANK_SCREEN,
@@ -197,7 +195,9 @@ static int dyn_fsync_init(void)
 
 static void dyn_fsync_exit(void)
 {
+#if 0
 	unregister_early_suspend(&dyn_fsync_early_suspend_handler);
+#endif
 
 	if (dyn_fsync_kobj != NULL)
 		kobject_put(dyn_fsync_kobj);
