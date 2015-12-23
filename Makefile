@@ -297,8 +297,8 @@ CONFIG_SHELL := $(shell if [ -x "$$BASH" ]; then echo $$BASH; \
 
 HOSTCC       = gcc
 HOSTCXX      = g++
-HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -O3 -fno-unswitch-loops -fomit-frame-pointer -std=gnu11 -pipe
-HOSTCXXFLAGS = -O3 -fno-unswitch-loops -pipe
+HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -O2 -fno-unswitch-loops -fomit-frame-pointer -std=gnu11 -pipe
+HOSTCXXFLAGS = -O2 -fno-unswitch-loops -pipe
 
 ifeq ($(shell $(HOSTCC) -v 2>&1 | grep -c "clang version"), 1)
 HOSTCFLAGS  += -Wno-unused-value -Wno-unused-parameter \
@@ -391,9 +391,8 @@ KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -fno-strict-aliasing -fno-common \
 		   -Werror-implicit-function-declaration \
 		   -Wno-format-security \
-		   -std=gnu11 \
-		   -march=core2 \
-		   -mtune=core2 \
+		   -march=atom \
+		   -mtune=atom \
 		   -minline-all-stringops \
 		   -maccumulate-outgoing-args \
 		   -fno-branch-count-reg \
@@ -622,7 +621,7 @@ KBUILD_CFLAGS	+= -Os $(call cc-disable-warning,maybe-uninitialized,)
 LDFLAGS += -Os --as-needed --sort-common
 else
 LDFLAGS += -O2 --as-needed --sort-common
-KBUILD_CFLAGS	+= -O3 -fno-unswitch-loops $(call cc-disable-warning,maybe-uninitialized,) \
+KBUILD_CFLAGS	+= -O2 -fno-unswitch-loops $(call cc-disable-warning,maybe-uninitialized,) \
 		  -ftree-vectorize \
 		  -fmodulo-sched \
 		  -fmodulo-sched-allow-regmoves \
@@ -639,6 +638,8 @@ KBUILD_CFLAGS	+= -O3 -fno-unswitch-loops $(call cc-disable-warning,maybe-uniniti
 		  -ftree-coalesce-inlined-vars \
 		  -fweb \
 		  -flto \
+		  -fno-toplevel-reorder \
+		  -fuse-linker-plugin \
 		  -ffat-lto-objects \
 		  -DNDEBUG \
 		  -fdevirtualize-speculatively \
@@ -650,9 +651,10 @@ KBUILD_CFLAGS	+= -O3 -fno-unswitch-loops $(call cc-disable-warning,maybe-uniniti
 		  -ftree-loop-linear \
 		  -floop-interchange \
 		  -floop-parallelize-all \
-		  -ftree-parallelize-loops=2 \
+		  -funsafe-loop-optimizations \
 		  -fcx-limited-range \
-		  -fno-signed-zeros
+		  -fno-signed-zeros \
+		  -ffast-math -fno-finite-math-only -ftrapping-math -fno-associative-math
 endif
 
 # Tell gcc to never replace conditional load with a non-conditional one
