@@ -217,7 +217,7 @@ SYSCALL_DEFINE1(syncfs, int, fd)
 	int ret;
 
 #ifdef CONFIG_DYNAMIC_FSYNC
-       if (likely(dyn_fsync_active && !early_suspend_active))
+       if (dyn_fsync_active && !early_suspend_active)
                return 0;
 #endif
 
@@ -231,9 +231,6 @@ SYSCALL_DEFINE1(syncfs, int, fd)
 
 	fdput(f);
 	return ret;
-#ifdef CONFIG_DYNAMIC_FSYNC
-	}
-#endif
 }
 
 /**
@@ -252,7 +249,7 @@ int vfs_fsync_range(struct file *file, loff_t start, loff_t end, int datasync)
 	struct inode *inode = file->f_mapping->host;
 
 #ifdef CONFIG_DYNAMIC_FSYNC
-       if (likely(dyn_fsync_active && !early_suspend_active))
+       if (dyn_fsync_active && !early_suspend_active)
                return 0;
 #endif
 
@@ -287,31 +284,33 @@ static int do_fsync(unsigned int fd, int datasync)
 	struct fd f = fdget(fd);
 	int ret = -EBADF;
 
+#ifdef CONFIG_DYNAMIC_FSYNC
+       if (dyn_fsync_active && !early_suspend_active)
+               return 0;
+#endif
+
 	if (f.file) {
 		ret = vfs_fsync(f.file, datasync);
 		fdput(f);
 	}
 	return ret;
-#ifdef CONFIG_DYNAMIC_FSYNC
-	}
-#endif
 }
 
 SYSCALL_DEFINE1(fsync, unsigned int, fd)
 {
 #ifdef CONFIG_DYNAMIC_FSYNC
-	if (likely(dyn_fsync_active && !early_suspend_active))
+	if (dyn_fsync_active && !early_suspend_active)
 		return 0;
-	else
 #endif
 	return do_fsync(fd, 0);
 }
 
 SYSCALL_DEFINE1(fdatasync, unsigned int, fd)
 {
-	if (likely(dyn_fsync_active && dyn_fdatasync_active && !early_suspend_active))
+#ifdef CONFIG_DYNAMIC_FSYNC
+	if dyn_fsync_active && !early_suspend_active)
 		return 0;
-	else
+#endif
 		return do_fsync(fd, 1);
 }
 
@@ -366,9 +365,8 @@ SYSCALL_DEFINE4(sync_file_range, int, fd, loff_t, offset, loff_t, nbytes,
 				unsigned int, flags)
 {
 #ifdef CONFIG_DYNAMIC_FSYNC
-	if (likely(dyn_fsync_active && !early_suspend_active))
+	if (dyn_fsync_active && !early_suspend_active)
 		return 0;
-	else {
 #endif
 
 	int ret;
@@ -449,9 +447,6 @@ out_put:
 	fdput(f);
 out:
 	return ret;
-#ifdef CONFIG_DYNAMIC_FSYNC
-	}
-#endif
 }
 
 /* It would be nice if people remember that not all the world's an i386
@@ -460,9 +455,9 @@ SYSCALL_DEFINE4(sync_file_range2, int, fd, unsigned int, flags,
 				 loff_t, offset, loff_t, nbytes)
 {
 #ifdef CONFIG_DYNAMIC_FSYNC
-	if (likely(dyn_fsync_active && !early_suspend_active))
+	if (dyn_fsync_active && !early_suspend_active)
 		return 0;
-	else
 #endif
+
 	return sys_sync_file_range(fd, offset, nbytes, flags);
 }
