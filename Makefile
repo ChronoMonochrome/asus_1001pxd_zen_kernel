@@ -297,8 +297,8 @@ CONFIG_SHELL := $(shell if [ -x "$$BASH" ]; then echo $$BASH; \
 
 HOSTCC       = gcc
 HOSTCXX      = g++
-HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -O2 -fomit-frame-pointer -std=gnu89
-HOSTCXXFLAGS = -O2
+HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -O3 -fno-unswitch-loops -fomit-frame-pointer -std=gnu11 -pipe
+HOSTCXXFLAGS = -O3 -fno-unswitch-loops -pipe
 
 ifeq ($(shell $(HOSTCC) -v 2>&1 | grep -c "clang version"), 1)
 HOSTCFLAGS  += -Wno-unused-value -Wno-unused-parameter \
@@ -359,12 +359,12 @@ CHECK		= sparse
 
 CHECKFLAGS     := -D__linux__ -Dlinux -D__STDC__ -Dunix -D__unix__ \
 		  -Wbitwise -Wno-return-void $(CF)
-CFLAGS_MODULE   =
+CFLAGS_MODULE   = -fno-lto -fno-fat-lto-objects -pipe
 AFLAGS_MODULE   =
 LDFLAGS_MODULE  =
 CFLAGS_KERNEL	=
 AFLAGS_KERNEL	=
-CFLAGS_GCOV	= -fprofile-arcs -ftest-coverage
+CFLAGS_GCOV	= -fprofile-arcs -ftest-coverage -pipe
 
 
 # Use USERINCLUDE when you must reference the UAPI directories only.
@@ -391,13 +391,24 @@ KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -fno-strict-aliasing -fno-common \
 		   -Werror-implicit-function-declaration \
 		   -Wno-format-security \
-		   -std=gnu89
+		   -std=gnu11 \
+		   -march=core2 \
+		   -mtune=core2 \
+		   -minline-all-stringops \
+		   -maccumulate-outgoing-args \
+		   -fno-branch-count-reg \
+		   -mhard-float \
+		   -mtls-dialect=gnu2 \
+		   -mveclibabi=svml \
+		   -mabi=sysv \
+		   -mmmx -msse -msse2 -msse3 -mssse3 \
+		   -pipe
 
 KBUILD_AFLAGS_KERNEL :=
 KBUILD_CFLAGS_KERNEL :=
 KBUILD_AFLAGS   := -D__ASSEMBLY__
-KBUILD_AFLAGS_MODULE  := -DMODULE
-KBUILD_CFLAGS_MODULE  := -DMODULE
+KBUILD_AFLAGS_MODULE  := -DMODULE -pipe
+KBUILD_CFLAGS_MODULE  := -DMODULE -pipe
 KBUILD_LDFLAGS_MODULE := -T $(srctree)/scripts/module-common.lds
 
 # Read KERNELRELEASE from include/config/kernel.release (if it exists)
@@ -608,8 +619,40 @@ KBUILD_CFLAGS	+= $(call cc-option,-fno-delete-null-pointer-checks,)
 
 ifdef CONFIG_CC_OPTIMIZE_FOR_SIZE
 KBUILD_CFLAGS	+= -Os $(call cc-disable-warning,maybe-uninitialized,)
+LDFLAGS += -Os --as-needed --sort-common
 else
-KBUILD_CFLAGS	+= -O2
+LDFLAGS += -O2 --as-needed --sort-common
+KBUILD_CFLAGS	+= -O3 -fno-unswitch-loops $(call cc-disable-warning,maybe-uninitialized,) \
+		  -ftree-vectorize \
+		  -fmodulo-sched \
+		  -fmodulo-sched-allow-regmoves \
+		  -fgcse-sm \
+		  -fgcse-las \
+		  -fsched-pressure \
+		  -fipa-pta \
+		  -fisolate-erroneous-paths-attribute \
+		  -ftree-loop-if-convert \
+		  -ftree-loop-distribution \
+		  -ftree-loop-im \
+		  -ftree-loop-ivcanon \
+		  -fivopts \
+		  -ftree-coalesce-inlined-vars \
+		  -fweb \
+		  -flto \
+		  -ffat-lto-objects \
+		  -DNDEBUG \
+		  -fdevirtualize-speculatively \
+		  -fdevirtualize-at-ltrans \
+		  -fgraphite \
+		  -floop-strip-mine \
+		  -floop-block \
+		  -fgraphite-identity \
+		  -ftree-loop-linear \
+		  -floop-interchange \
+		  -floop-parallelize-all \
+		  -ftree-parallelize-loops=2 \
+		  -fcx-limited-range \
+		  -fno-signed-zeros
 endif
 
 # Tell gcc to never replace conditional load with a non-conditional one
