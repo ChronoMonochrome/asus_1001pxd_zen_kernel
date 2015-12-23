@@ -23,6 +23,10 @@ extern bool dyn_fsync_active;
 extern bool dyn_fdatasync_active;
 #endif
 
+#ifdef CONFIG_DYNAMIC_FSYNC
+extern bool early_suspend_active;
+#endif
+
 #define VALID_FLAGS (SYNC_FILE_RANGE_WAIT_BEFORE|SYNC_FILE_RANGE_WRITE| \
 			SYNC_FILE_RANGE_WAIT_AFTER)
 
@@ -227,6 +231,9 @@ SYSCALL_DEFINE1(syncfs, int, fd)
 
 	fdput(f);
 	return ret;
+#ifdef CONFIG_DYNAMIC_FSYNC
+	}
+#endif
 }
 
 /**
@@ -285,6 +292,9 @@ static int do_fsync(unsigned int fd, int datasync)
 		fdput(f);
 	}
 	return ret;
+#ifdef CONFIG_DYNAMIC_FSYNC
+	}
+#endif
 }
 
 SYSCALL_DEFINE1(fsync, unsigned int, fd)

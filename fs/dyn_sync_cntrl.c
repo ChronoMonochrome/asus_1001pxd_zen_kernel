@@ -18,7 +18,9 @@
 #include <linux/module.h>
 #include <linux/kobject.h>
 #include <linux/sysfs.h>
+#if 0
 #include <linux/earlysuspend.h>
+#endif
 #include <linux/mutex.h>
 
 #include <linux/writeback.h>
@@ -160,18 +162,22 @@ static void dyn_fsync_late_resume(struct early_suspend *h)
 	mutex_unlock(&fsync_mutex);
 }
 
+#if 0
 static struct early_suspend dyn_fsync_early_suspend_handler = 
 	{
 		.level = EARLY_SUSPEND_LEVEL_BLANK_SCREEN,
 		.suspend = dyn_fsync_early_suspend,
 		.resume = dyn_fsync_late_resume,
 	};
+#endif
 
 static int dyn_fsync_init(void)
 {
 	int sysfs_result;
 
+#if 0
 	register_early_suspend(&dyn_fsync_early_suspend_handler);
+#endif
 
 	dyn_fsync_kobj = kobject_create_and_add("dyn_fsync", kernel_kobj);
 	if (!dyn_fsync_kobj) {
